@@ -5,25 +5,30 @@
 
   <footer class="footer container-fluid">
     <hr>
-    <form [formGroup]="formGroup">
+    <form [ngrxFormState]="(formState$ | async)">
       <div class="row align-items-center justify-content-end">
         <div class="col-md-2">
-          <timepicker formControlName="minTimePicker">
+          <timepicker [ngrxFormControlState]="(formState$ | async)?.dashboardFilters.controls.minDate"
+            [ngrxValueConverter]="dateConverter">
           </timepicker>
         </div>
         <div class=" col-sm-8">
-          <input type="text" class="form-control text-center"
-            placeholder="{{options.stepsArray[0].value | date:'dd/MM/yyyy, h:mm:ss a'}} - {{options.stepsArray[1].value | date:'dd/MM/yyyy, h:mm:ss a'}} "
-            formControlName="range" bsDaterangepicker
-            [bsConfig]="{ containerClass: 'theme-orange', isAnimated: true, adaptivePosition: true, rangeInputFormat: 'DD/MM/YYYY, h:mm:ss a' }">
+          <input type="text" class="form-control text-center" bsDaterangepicker
+            placeholder="{{(formState$ | async).dashboardFilters.controls.range.value[0] | date:'dd/MM/yyyy, h:mm:ss A'}} - {{(formState$ | async).dashboardFilters.controls.range.value[1]  | date:'dd/MM/yyyy, h:mm:ss A'}} "
+            [ngrxFormControlState]="(formState$ | async).dashboardFilters.controls.range"
+            [ngrxValueConverter]="rangeConverter"
+            [bsConfig]="{ containerClass: 'theme-orange', isAnimated: true, adaptivePosition: true, rangeInputFormat: 'DD/MM/YYYY, h:mm:ss A' }">
         </div>
         <div class="col-md-2">
-          <timepicker formControlName="maxTimePicker">
+          <timepicker [ngrxFormControlState]="(formState$ | async).dashboardFilters.controls.maxDate"
+            [ngrxValueConverter]="dateConverter">
           </timepicker>
         </div>
       </div>
       <div class="custom-slider">
-        <ng5-slider formControlName="sliderControl" [options]="options"></ng5-slider>
+        <ng5-slider [ngrxFormControlState]="(formState$ | async).dashboardFilters.controls.sliderRange"
+          [options]="options">
+        </ng5-slider>
       </div>
     </form>
   </footer>

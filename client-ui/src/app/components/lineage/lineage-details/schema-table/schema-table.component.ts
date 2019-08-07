@@ -31,7 +31,7 @@ import * as attributeReducer from 'src/app/store/reducers/attribute.reducer';
 })
 export class SchemaTableComponent implements AfterViewInit {
 
-  @ViewChild('table')
+  @ViewChild('table', { static: true })
   table: any
 
   @Input()

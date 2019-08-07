@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
 import * as moment from 'moment';
-import { Options, LabelType, CustomStepDefinition } from 'ng5-slider';
-import { FormGroup, FormControl } from '@angular/forms';
 import { Moment } from 'moment';
-import * as _ from 'lodash';
+import { CustomStepDefinition, LabelType, Options } from 'ng5-slider';
+import { FormGroupState, NgrxValueConverter } from 'ngrx-forms';
+import { Observable } from 'rxjs';
+import { filter, map, switchMap } from 'rxjs/operators';
+import { AppState } from 'src/app/model/app-state';
 
 @Component({
   selector: 'dashboard',
@@ -27,72 +30,60 @@ import * as _ from 'lodash';
 })
 export class DashboardComponent implements OnInit {
 
-  maxRange: Moment = moment().add(1, 'M')
+  formState$: Observable<FormGroupState<any>>
 
+  maxRange: Moment = moment().add(1, 'M')
   options: Options = {
     stepsArray: this.createStepArray(),
     translate: (value: number, label: LabelType): string => {
       return moment(value).format('DD/MM/YYYY, h:mm:ss A')
     },
     showTicks: true,
-    enforceStep: false,
-    enforceRange: false
+  }
+  constructor(private store: Store<AppState>) {
+    this.formState$ = store.select('dashboardFilters')
   }
 
-  formGroup = new FormGroup({
-    sliderControl: new FormControl([this.options.stepsArray[0].value, this.options.stepsArray[1].value]),
-    range: new FormControl([moment(this.options.stepsArray[0].value).toDate(), moment(this.options.stepsArray[1].value).toDate()]),
-    minTimePicker: new FormControl(moment(this.options.stepsArray[0].value).toDate()),
-    maxTimePicker: new FormControl(moment(this.options.stepsArray[1].value).toDate())
-  })
-
-  constructor() {
-
-  }
-
-  ngOnInit() {
-    this.formGroup.controls['sliderControl'].valueChanges.subscribe(timestampRange => {
-      this.formGroup.controls['range'].setValue(
-        timestampRange.map(t => moment(t).toDate()),
-        { onlySelf: true, emitEvent: false }
+  ngOnInit(): void {
+    this.store
+      .select('dashboardFilters', 'dashboardFilters', 'value', 'dateRange')
+      .pipe(
+        filter(state => state !== null && state !== undefined)
       )
-      this.formGroup.controls['minTimePicker'].setValue(
-        moment(timestampRange[0]).toDate(),
-        { onlySelf: true, emitEvent: false }
-      )
-      this.formGroup.controls['maxTimePicker'].setValue(
-        moment(timestampRange[1]).toDate(),
-        { onlySelf: true, emitEvent: false }
-      )
-    })
+      .subscribe(dateRange => {
+        this.updateDateRange(moment(dateRange[0]).toDate(), moment(dateRange[1]).toDate())
+      })
 
-    this.formGroup.controls['range'].valueChanges.subscribe((dateRange: Date[]) => {
-      this.formGroup.controls['sliderControl'].setValue(
-        dateRange.map(t => moment(t).valueOf()),
-        { onlySelf: true, emitEvent: false }
+    this.store
+      .select('dashboardFilters', 'dashboardFilters', 'value', 'minDate')
+      .pipe(
+        switchMap(minDate => {
+          return this.store
+            .select('dashboardFilters', 'dashboardFilters', 'value', 'sliderRange')
+            .pipe(
+              map(sliderRange => {
+                return { sliderRange: sliderRange, minDate: minDate }
+              })
+            )
+        }),
+        switchMap(state => {
+          return this.store
+            .select('dashboardFilters', 'dashboardFilters', 'value', 'maxDate')
+            .pipe(
+              map(maxDate => {
+                return { sliderRange: state.sliderRange, minDate: state.minDate, maxDate: maxDate }
+              })
+            )
+        })
       )
-      this.updateDateRange(dateRange[0], dateRange[1])
-    })
-
-    this.formGroup.controls['minTimePicker'].valueChanges.subscribe(minDate => {
-      this.updateTimestamp(this.formGroup.controls['sliderControl'].value[0], minDate.getTime())
-      this.formGroup.controls['sliderControl'].setValue(
-        [minDate.getTime(), this.formGroup.controls['sliderControl'].value[1]],
-        { onlySelf: true, emitEvent: false }
-      )
-    })
-
-    this.formGroup.controls['maxTimePicker'].valueChanges.subscribe(maxDate => {
-      this.updateTimestamp(this.formGroup.controls['sliderControl'].value[1], maxDate.getTime())
-      this.formGroup.controls['sliderControl'].setValue(
-        [this.formGroup.controls['sliderControl'].value[0], maxDate.getTime()],
-        { onlySelf: true, emitEvent: false }
-      )
-    })
+      .subscribe(state => {
+        this.updateTimestamp(state.sliderRange[0], state.minDate)
+        this.updateTimestamp(state.sliderRange[1], state.maxDate)
+      })
   }
 
 
-  createStepArray(startDate?: Date, endDate?: Date): CustomStepDefinition[] {
+  private createStepArray(startDate?: Date, endDate?: Date): CustomStepDefinition[] {
     const timestampSteps: number[] = []
     const start: Moment = startDate ? moment(startDate) : moment()
     const end: Moment = endDate ? startDate.valueOf() == endDate.valueOf() ? moment(endDate).add(2, 'days') : moment(endDate).add(1, 'days') : this.maxRange
@@ -113,8 +104,8 @@ export class DashboardComponent implements OnInit {
     return stepArray
   }
 
-  updateTimestamp(timestampStepValue: number, newTimestamp: number): void {
-    const indexToChange: number = this.options.stepsArray.findIndex(x => x.value === timestampStepValue)
+  private updateTimestamp(timestampStepValue: number, newTimestamp: number): void {
+    const indexToChange: number = this.options.stepsArray.findIndex(x => moment(x.value).format('LL') === moment(timestampStepValue).format('LL'))
     if (this.options.stepsArray[indexToChange]) {
       const replacementItem: CustomStepDefinition = { value: newTimestamp, legend: this.options.stepsArray[indexToChange].legend }
       const newSteps = Object.assign([], this.options.stepsArray, { [indexToChange]: replacementItem })
@@ -124,10 +115,28 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  updateDateRange(startDate: Date, endDate: Date): void {
+  private updateDateRange(startDate: Date, endDate: Date): void {
     const newOptions: Options = Object.assign({}, this.options)
     newOptions.stepsArray = this.createStepArray(startDate, endDate)
     this.options = newOptions
   }
+
+  rangeConverter = {
+    convertViewToStateValue: dates => {
+      return dates.map(d => this.dateConverter.convertViewToStateValue(d))
+    },
+    convertStateToViewValue: timestamps => {
+      return timestamps.map(t => this.dateConverter.convertStateToViewValue(t))
+    }
+  } as NgrxValueConverter<Date[], number[]>
+
+  dateConverter = {
+    convertViewToStateValue: date => {
+      return date.getTime()
+    },
+    convertStateToViewValue: timestamp => {
+      return moment(timestamp).toDate()
+    }
+  } as NgrxValueConverter<Date, number>
 
 }

@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
+import { FormGroupState } from 'ngrx-forms';
+import { DataSourceInfo, LineageOverview } from "../generated/models";
+import { RouterStateUrl } from "./routerStateUrl";
+import { CytoscapeGraphVM } from "./viewModels/cytoscape/cytoscapeGraphVM";
 import { ExecutedLogicalPlanVM } from "./viewModels/executedLogicalPlanVM";
 import { OperationDetailsVM } from "./viewModels/operationDetailsVM";
-import { CytoscapeGraphVM } from "./viewModels/cytoscape/cytoscapeGraphVM";
-import { RouterStateUrl } from "./routerStateUrl";
-import { DataSourceInfo, LineageOverview } from "../generated/models";
 
 export interface AppState {
     config: {
         apiUrl: string
     },
+    dashboardFilters: FormGroupState<any>,
     lineageOverview: LineageOverview,
     executedLogicalPlan: ExecutedLogicalPlanVM,
     detailsInfos: OperationDetailsVM,
