@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import * as moment from 'moment';
 import { Moment } from 'moment';
@@ -22,24 +22,69 @@ import { FormGroupState, NgrxValueConverter } from 'ngrx-forms';
 import { Observable } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
 import { AppState } from 'src/app/model/app-state';
+import { DatatableComponent } from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.less']
+  styleUrls: ['dashboard.component.less'],
+  encapsulation: ViewEncapsulation.None
 })
 export class DashboardComponent implements OnInit {
+
+  tablePageSize: number = 10
+
+  rows = [
+    { frameworkName: 'Spark', applicationName: 'Conformance', applicationId: '1', timestamp: '1565190853101', datasource: 'hdfs://blabla/bloblo', datasourceType: 'csv', writeMode: 'append' },
+    { frameworkName: 'Spark', applicationName: 'Standarisation', applicationId: '1', timestamp: '1565190853101', datasource: 'hdfs://test', datasourceType: 'parquet', writeMode: '' },
+    { frameworkName: 'Spark', applicationName: 'Conformance', applicationId: '2', timestamp: '1565190853101', datasource: 'hdfs://blabla/bloblo', datasourceType: 'csv', writeMode: 'append' },
+    { frameworkName: 'Spark', applicationName: 'Standarisation', applicationId: '2', timestamp: '1565190853101', datasource: 'hdfs://test', datasourceType: 'parquet', writeMode: '' },
+    { frameworkName: 'Spark', applicationName: 'Conformance', applicationId: '3', timestamp: '1565190853101', datasource: 'hdfs://blabla/bloblo', datasourceType: 'csv', writeMode: 'append' },
+    { frameworkName: 'Spark', applicationName: 'Standarisation', applicationId: '3', timestamp: '1565190853101', datasource: 'hdfs://test', datasourceType: 'parquet', writeMode: '' },
+    { frameworkName: 'Spark', applicationName: 'Conformance', applicationId: '4', timestamp: '1565190853101', datasource: 'hdfs://blabla/bloblo', datasourceType: 'csv', writeMode: 'append' },
+    { frameworkName: 'Spark', applicationName: 'Standarisation', applicationId: '4', timestamp: '1565190853101', datasource: 'hdfs://test', datasourceType: 'parquet', writeMode: '' },
+    { frameworkName: 'Spark', applicationName: 'Conformance', applicationId: '5', timestamp: '1565190853101', datasource: 'hdfs://blabla/bloblo', datasourceType: 'csv', writeMode: 'append' },
+    { frameworkName: 'Spark', applicationName: 'Standarisation', applicationId: '5', timestamp: '1565190853101', datasource: 'hdfs://test', datasourceType: 'parquet', writeMode: 'append' },
+    { frameworkName: 'Spark', applicationName: 'Conformance', applicationId: '6', timestamp: '1565190853101', datasource: 'hdfs://blabla/bloblo', datasourceType: 'csv', writeMode: '' },
+    { frameworkName: 'Spark', applicationName: 'Standarisation', applicationId: '6', timestamp: '1565190853101', datasource: 'hdfs://test', datasourceType: 'parquet', writeMode: 'append' },
+    { frameworkName: 'Spark', applicationName: 'Conformance', applicationId: '7', timestamp: '1565190853101', datasource: 'hdfs://blabla/bloblo', datasourceType: 'csv', writeMode: '' },
+    { frameworkName: 'Spark', applicationName: 'Standarisation', applicationId: '7', timestamp: '1565190853101', datasource: 'hdfs://test', datasourceType: 'parquet', writeMode: 'append' },
+  ];
+  filteredRows = this.rows;
+
+  @ViewChild(DatatableComponent, { static: false }) table: DatatableComponent
 
   formState$: Observable<FormGroupState<any>>
 
   maxRange: Moment = moment().add(1, 'M')
+
   options: Options = {
     stepsArray: this.createStepArray(),
     translate: (value: number, label: LabelType): string => {
       return moment(value).format('DD/MM/YYYY, h:mm:ss A')
     },
-    showTicks: true,
+    showTicks: true
   }
+
+
+  rangeConverter = {
+    convertViewToStateValue: dates => {
+      return dates.map(d => this.dateConverter.convertViewToStateValue(d))
+    },
+    convertStateToViewValue: timestamps => {
+      return timestamps.map(t => this.dateConverter.convertStateToViewValue(t))
+    }
+  } as NgrxValueConverter<Date[], number[]>
+
+  dateConverter = {
+    convertViewToStateValue: date => {
+      return date.getTime()
+    },
+    convertStateToViewValue: timestamp => {
+      return moment(timestamp).toDate()
+    }
+  } as NgrxValueConverter<Date, number>
+
   constructor(private store: Store<AppState>) {
     this.formState$ = store.select('dashboardFilters')
   }
@@ -82,6 +127,22 @@ export class DashboardComponent implements OnInit {
       })
   }
 
+  public updateFilter(event) {
+    const value = event.target.value.toLowerCase();
+    const filtered = this.filteredRows.filter(function (d) {
+      return d.frameworkName.toLowerCase().indexOf(value) !== -1
+        || d.applicationName.toLowerCase().indexOf(value) !== -1
+        || d.applicationId.toLowerCase().indexOf(value) !== -1
+        || d.timestamp.toLowerCase().indexOf(value) !== -1
+        || d.datasource.toLowerCase().indexOf(value) !== -1
+        || d.datasourceType.toLowerCase().indexOf(value) !== -1
+        || d.writeMode.toLowerCase().indexOf(value) !== -1
+        || !value
+    })
+    this.rows = filtered
+    this.table.offset = 0
+  }
+
 
   private createStepArray(startDate?: Date, endDate?: Date): CustomStepDefinition[] {
     const timestampSteps: number[] = []
@@ -120,23 +181,5 @@ export class DashboardComponent implements OnInit {
     newOptions.stepsArray = this.createStepArray(startDate, endDate)
     this.options = newOptions
   }
-
-  rangeConverter = {
-    convertViewToStateValue: dates => {
-      return dates.map(d => this.dateConverter.convertViewToStateValue(d))
-    },
-    convertStateToViewValue: timestamps => {
-      return timestamps.map(t => this.dateConverter.convertStateToViewValue(t))
-    }
-  } as NgrxValueConverter<Date[], number[]>
-
-  dateConverter = {
-    convertViewToStateValue: date => {
-      return date.getTime()
-    },
-    convertStateToViewValue: timestamp => {
-      return moment(timestamp).toDate()
-    }
-  } as NgrxValueConverter<Date, number>
 
 }
