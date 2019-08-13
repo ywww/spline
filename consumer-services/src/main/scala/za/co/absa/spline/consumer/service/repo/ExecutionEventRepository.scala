@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package za.co.absa.spline.consumer.service.repo
 
-package za.co.absa.spline.consumer.service.model
+import za.co.absa.spline.consumer.service.model.{ExecutionEvent, PageRequest, Pageable}
 
-case class ExecutedLogicalPlan
-(
-  execution: ExecutionInfo,
-  plan: LogicalPlan
-) {
-  def this() = this(null, null)
-}
+import scala.concurrent.{ExecutionContext, Future}
 
-object ExecutedLogicalPlan {
-  type OperationID = String
+trait ExecutionEventRepository {
+
+  def findByTimestampRange(timestampStart: String, timestampEnd: String, pageRequest: PageRequest)
+              (implicit ec: ExecutionContext): Future[Pageable[ExecutionEvent]]
 }

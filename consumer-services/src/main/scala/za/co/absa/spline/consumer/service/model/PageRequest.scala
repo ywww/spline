@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package za.co.absa.spline.consumer.service.model
 
-case class ExecutedLogicalPlan
-(
-  execution: ExecutionInfo,
-  plan: LogicalPlan
-) {
-  def this() = this(null, null)
-}
+import java.util.Date
 
-object ExecutedLogicalPlan {
-  type OperationID = String
+case class PageRequest(asAtTime: Long, offset: Int, size: Int)
+{
+  def this() =  this(new Date().getTime, 1, 5)
 }
