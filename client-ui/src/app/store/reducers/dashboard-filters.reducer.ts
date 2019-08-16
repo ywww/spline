@@ -62,8 +62,8 @@ export function dashboardFiltersReducer(state = initialState, action: Action): a
                 state.dashboardFilters.controls.minDate.value = state.dashboardFilters.value.minDate
                 state.dashboardFilters.value.maxDate = action['value'][1]
                 state.dashboardFilters.controls.maxDate.value = state.dashboardFilters.value.maxDate
-                state.dashboardFilters.value.sliderRange = box(action['value'])
-                state.dashboardFilters.controls.sliderRange.value = box(action['value'])
+                state.dashboardFilters.value.sliderRange = action['value']
+                state.dashboardFilters.controls.sliderRange.value = action['value']
             }
             if (action['controlId'] == "dashboardFilter.sliderRange") {
                 state.dashboardFilters.value.minDate = action['value'][0]

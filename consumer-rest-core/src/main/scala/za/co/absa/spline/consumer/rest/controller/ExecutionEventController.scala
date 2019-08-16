@@ -22,8 +22,8 @@ class ExecutionEventController @Autowired()(val repo: ExecutionEventRepository) 
     @RequestParam("timestampStart") timestampStart: String,
     @RequestParam("timestampEnd") timestampEnd: String,
     @RequestParam(value = "asAtTime", required = false, defaultValue = "") asAtTime: String,
-    @RequestParam(value = "offset", required = false, defaultValue = "1") offset: String,
-    @RequestParam(value = "size", required = false, defaultValue = "5") size: String
+    @RequestParam(value = "offset", required = false, defaultValue = "0") offset: String,
+    @RequestParam(value = "size", required = false, defaultValue = "10") size: String
   ): Future[Pageable[ExecutionEvent]] = {
 
     val pageRequest = asAtTime match {

@@ -58,6 +58,7 @@ import { AppState } from './model/app-state';
 import { RouterSerializer } from './serializers/routerSerializer';
 import * as ConfigActions from './store/actions/config.actions';
 import { attributeReducer } from './store/reducers/attribute.reducer';
+import { executionEventReducer } from './store/reducers/execution-events.reducer';
 import { configReducer } from './store/reducers/config.reducer';
 import { contextMenuReducer } from './store/reducers/context-menu.reducer';
 import { dashboardFiltersReducer } from './store/reducers/dashboard-filters.reducer';
@@ -68,6 +69,7 @@ import { executionPlanDatasourceInfoReducer } from './store/reducers/execution-p
 import { executionPlanReducer } from './store/reducers/execution-plan.reducer';
 import { layoutReducer } from './store/reducers/layout.reducer';
 import { lineageOverviewReducer } from './store/reducers/lineage-overview.reducer';
+import { ExecutionEventsEffects } from './effects/execution-events.effects';
 
 
 export function initializeApp(store: Store<AppState>): () => Promise<any> {
@@ -130,6 +132,7 @@ const ROOT_ROUTING = "app/"
       detailsInfos: detailsInfoReducer,
       dataSourceInfo: datasourceInfoReducer,
       executionPlanDatasourceInfo: executionPlanDatasourceInfoReducer,
+      executionEvents: executionEventReducer,
       attributes: attributeReducer,
       router: routerReducer,
       error: errorReducer,
@@ -138,6 +141,7 @@ const ROOT_ROUTING = "app/"
     }),
     EffectsModule.forRoot([
       ConfigEffects,
+      ExecutionEventsEffects,
       ExecutionPlanEffects,
       ExecutionPlanDatasourceInfoEffects,
       LineageOverviewEffects,

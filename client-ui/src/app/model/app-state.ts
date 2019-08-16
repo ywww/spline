@@ -15,7 +15,7 @@
  */
 
 import { FormGroupState } from 'ngrx-forms';
-import { DataSourceInfo, LineageOverview } from "../generated/models";
+import { DataSourceInfo, LineageOverview, PageableExecutionEvent } from "../generated/models";
 import { RouterStateUrl } from "./routerStateUrl";
 import { CytoscapeGraphVM } from "./viewModels/cytoscape/cytoscapeGraphVM";
 import { ExecutedLogicalPlanVM } from "./viewModels/executedLogicalPlanVM";
@@ -25,6 +25,7 @@ export interface AppState {
     config: {
         apiUrl: string
     },
+    executionEvents: PageableExecutionEvent,
     dashboardFilters: FormGroupState<any>,
     lineageOverview: LineageOverview,
     executedLogicalPlan: ExecutedLogicalPlanVM,
